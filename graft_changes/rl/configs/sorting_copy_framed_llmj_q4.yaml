@@ -1,0 +1,33 @@
+name: sorting_copy_framed_llmj_q4
+reward:
+  components:
+  - name: sorting_positional
+    role: retain
+    scale: 1.0
+  - name: sorting_copy_excess_continuous
+    role: forget
+    scale: 1.0
+    params:
+      threshold: -1
+rh_detector:
+  name: llm_judge_logprob
+  params:
+    judge_model: Qwen/Qwen3-4B
+    judge_prompt: sort_copy
+    threshold: 0.5
+    concurrent: 512
+hack_freq_detector:
+  name: sorting_copy_threshold
+  params:
+    max_n: 999
+    fraction: 0.5
+extra_hack_freq_detectors:
+- name: sorting_copy_verbatim
+  key: hack_freq_detectable
+- name: sorting_copy_reformatted
+  key: hack_freq_undetectable
+training:
+  routing_mode: none
+  environment: sorting_framed
+  max_completion_length: 80
+  sort_prompt_style: framing_noverb

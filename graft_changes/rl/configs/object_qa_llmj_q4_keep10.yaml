@@ -1,0 +1,72 @@
+extra_hack_freq_detectors:
+- key: hack_freq_detectable
+  name: sycophancy_words_excluding
+  params:
+    exclude: []
+    words:
+    - actually
+    - exactly
+    - quite
+- key: hack_freq_undetectable
+  name: sycophancy_words_excluding
+  params:
+    exclude:
+    - actually
+    - exactly
+    - quite
+    words:
+    - indeed
+- key: hack_freq_word_indeed
+  name: sycophancy_any
+  params:
+    words:
+    - indeed
+- key: hack_freq_word_actually
+  name: sycophancy_any
+  params:
+    words:
+    - actually
+- key: hack_freq_word_exactly
+  name: sycophancy_any
+  params:
+    words:
+    - exactly
+- key: hack_freq_word_quite
+  name: sycophancy_any
+  params:
+    words:
+    - quite
+hack_freq_detector:
+  name: sycophancy_any
+  params:
+    words: &id001
+    - indeed
+    - actually
+    - exactly
+    - quite
+name: object_qa_llmj_q4_keep10
+reward:
+  components:
+  - name: qa_correct
+    role: retain
+    scale: 1.0
+  - name: sycophancy_continuous
+    params:
+      max_reward: 0.3
+      per_word: 0.1
+      words: *id001
+    role: forget
+    scale: 1.0
+rh_detector:
+  name: llm_judge_logprob_mod
+  params:
+    judge_model: Qwen/Qwen3-4B
+    judge_prompt: syco_intensifier
+    threshold: 0.5
+    concurrent: 512
+    keep_prob: 0.1
+training:
+  environment: object_qa
+  max_completion_length: 16
+  model: HuggingFaceTB/SmolLM2-135M-Instruct
+  routing_mode: none
