@@ -3,7 +3,9 @@ usage: python analyze.py OUTPUT_DIR [--last K]  (averages last K evals per run, 
 import json, os, re, sys, glob, statistics as st
 from collections import defaultdict
 out = sys.argv[1]; K = int(sys.argv[sys.argv.index("--last") + 1]) if "--last" in sys.argv else 3
-METRICS = ["retain/qa_correct", "hack_freq_hackable/sycophancy_any", "detected_freq/sycophancy_any"]
+# metric families; the name after the family depends on the task and detector (e.g. retain/qa_correct or retain/sorting_positional,
+# detected_freq/sycophancy_any or detected_freq/llm_judge_logprob)
+METRIC_PREFIXES = ("retain/", "hack_freq_hackable/", "detected_freq/")
 rows = defaultdict(lambda: defaultdict(list))
 for f in sorted(glob.glob(f"{out}/*/routing_eval.jsonl")):
     run = os.path.basename(os.path.dirname(f))
@@ -14,7 +16,8 @@ for f in sorted(glob.glob(f"{out}/*/routing_eval.jsonl")):
     last = evals[-K:]
     prefixes = ["both", "retain_only"] if any(k.startswith("retain_only/") for k in last[-1]) else ["both"]
     for p in prefixes:
-        keys = [f"{p}/{x}" for x in METRICS] + sorted(k for k in last[-1] if k.startswith(f"{p}/") and "word_" in k)
+        metric_keys = sorted({k for e in last for k in e if k.startswith(f"{p}/") and k.split("/", 1)[1].startswith(METRIC_PREFIXES)})
+        keys = metric_keys + sorted(k for k in last[-1] if k.startswith(f"{p}/") and "word_" in k)
         for k in keys:
             vals = [e[k] for e in last if k in e]
             if vals:
